@@ -1,29 +1,29 @@
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.nio.file.Path;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 
 public class PlayerWindow {
     private final JFrame frame;
-    private final JPanel videoPanel;
+    private final VideoPanel videoPanel;
     private final JButton openButton;
     private final JButton playButton;
     private final JButton pauseButton;
     private final JButton stopButton;
     private Path selectedMediaPath;
     private PlayerState playerState = PlayerState.NO_MEDIA;
+    private final JLabel statusLabel;
 
 
     public PlayerWindow() {
         frame = new JFrame("Video Player");
         frame.setLayout(new BorderLayout());
 
-        videoPanel = new JPanel();
-        videoPanel.setBackground(Color.BLACK);
+        videoPanel = new VideoPanel();
 
         JPanel controlPanel = new JPanel();
 
@@ -34,12 +34,14 @@ public class PlayerWindow {
         playButton.addActionListener(event -> startPlayback());
 
         pauseButton = new JButton("pause");
-        pauseButton.addActionListener(event -> startPlayback());
+        pauseButton.addActionListener(event -> pausePlayback());
 
         stopButton = new JButton("stop");
-        stopButton.addActionListener(event -> startPlayback());
+        stopButton.addActionListener(event -> stopPlayback());
 
-        updateControls();
+        statusLabel = new JLabel("No Media Selected");
+
+        refreshUI();
 
         controlPanel.add(playButton);
         controlPanel.add(pauseButton);
@@ -48,6 +50,7 @@ public class PlayerWindow {
 
         frame.add(videoPanel, BorderLayout.CENTER);
         frame.add(controlPanel, BorderLayout.SOUTH);
+        frame.add(statusLabel, BorderLayout.NORTH);
 
         frame.setSize(960, 540);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,7 +81,7 @@ public class PlayerWindow {
     private void setPlayerState(PlayerState newState) {
         playerState = newState;
         System.out.println("Player state: " + playerState);
-        updateControls();
+        refreshUI();
     }
 
     private void updateControls() {
@@ -114,5 +117,26 @@ public class PlayerWindow {
         if (playerState == PlayerState.PLAYING || playerState == PlayerState.PAUSED) {
             setPlayerState(PlayerState.READY);
         }
+    }
+
+    private void updateStatusLabel() {
+        String fileName = selectedMediaPath == null ? ""
+            :selectedMediaPath.getFileName().toString();
+
+        switch (playerState) {
+            case NO_MEDIA ->
+                statusLabel.setText("No Media Selected");
+            case READY ->
+                statusLabel.setText("Ready: " + fileName);
+            case PLAYING ->
+                statusLabel.setText("Playing: " + fileName);
+            case PAUSED ->
+                statusLabel.setText("Paused: " + fileName);
+        }
+    }
+
+    private void refreshUI() {
+        updateControls();
+        updateStatusLabel();
     }
 }
